@@ -53,7 +53,7 @@ bot.on("messageCreate", async (data) => {
       if (!user) return;
       embeds.push(
         new EmbedBuilder()
-          .setTitle("Removed user")
+          .setTitle("Added user")
           .setDescription(`${user.username} was Added to the GC`)
           .setColor("Green")
           .setFooter({
