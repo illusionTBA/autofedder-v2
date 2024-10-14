@@ -22,6 +22,7 @@ bot.on("ready", () => {
 
 bot.on("messageCreate", async (data) => {
   if (data.author.id === Deno.env.get("DISCORD_ID")) return;
+  
   if (data.type === "CHANNEL_ICON_CHANGE") {
     webhook.send({
       username: data.author.username,
@@ -29,6 +30,7 @@ bot.on("messageCreate", async (data) => {
       content: "GC Icon changed to whatever this is",
     });
   }
+
   if (data.channelId === fedId) {
     const embeds: EmbedBuilder[] = [];
     const videos: string[] = [];
@@ -89,8 +91,8 @@ bot.on("messageCreate", async (data) => {
     }
 
     webhook.send({
-      username: `${data.author.globalName} (@\u200B${data.author.username})`,
-      avatarURL: `https://cdn.discordapp.com/avatars/${data.author.id}/${data.author.avatar}.webp`,
+      username: data.author.username,
+      avatarURL: data.author.displayAvatarURL(),
       content:
         cleaned.length > 2000
           ? cleaned.slice(0, 2000)
@@ -104,27 +106,17 @@ bot.on("messageCreate", async (data) => {
     });
   } else if (data.channelId === forwardId) {
     if (data.content.startsWith("!send")) {
-      bot.channels.cache
-        .get(fedId)
-        ?.send(
-          `${data.author.globalName} (<@${data.author.id}>): ${
-            data.content.split("!send")[1]
-          }`
-        );
+      bot.channels.cache.get(fedId)?.send(`<@${data.author.id}>: ${data.content.split("!send")[1].trim()}`);
       data.attachments.forEach((attachment) => {
-        bot.channels.cache
-          .get(fedId)
-          ?.send(
-            `${data.author.globalName} (<@${data.author.id}>): ${attachment.url}`
-          );
+        bot.channels.cache.get(fedId)?.send(`<@${data.author.id}>: ${attachment.url}`);
       });
+      data.react("✅");
     } else if (data.content.startsWith("!anon")) {
-      bot.channels.cache
-        .get(fedId)
-        ?.send(`🕵️ (@🕵️): ${data.content.split("!anon")[1]}`);
+      bot.channels.cache.get(fedId)?.send(`🕵️: ${data.content.split("!anon")[1].trim()}`);
       data.attachments.forEach((attachment) => {
         bot.channels.cache.get(fedId)?.send(`${attachment.url}`);
       });
+      data.react("✅");
     }
   }
 });
