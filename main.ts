@@ -22,7 +22,7 @@ bot.on("ready", () => {
 
 bot.on("messageCreate", async (data) => {
   if (data.author.id === Deno.env.get("DISCORD_ID")) return;
-  
+
   if (data.type === "CHANNEL_ICON_CHANGE") {
     webhook.send({
       username: data.author.username,
@@ -34,6 +34,34 @@ bot.on("messageCreate", async (data) => {
   if (data.channelId === fedId) {
     const embeds: EmbedBuilder[] = [];
     const videos: string[] = [];
+    if (data.type === "RECIPIENT_REMOVE") {
+      const user = data.mentions.users.first();
+      if (!user) return;
+      embeds.push(
+        new EmbedBuilder()
+          .setTitle("Removed user")
+          .setDescription(`${user.username} was removed from the GC`)
+          .setColor("Red")
+          .setFooter({
+            text: data.author.username,
+            iconURL: data.author.displayAvatarURL(),
+          })
+      );
+    }
+    if (data.type === "RECIPIENT_ADD") {
+      const user = data.mentions.users.first();
+      if (!user) return;
+      embeds.push(
+        new EmbedBuilder()
+          .setTitle("Removed user")
+          .setDescription(`${user.username} was Added to the GC`)
+          .setColor("Green")
+          .setFooter({
+            text: data.author.username,
+            iconURL: data.author.displayAvatarURL(),
+          })
+      );
+    }
     if (data.type === "REPLY" && data.reference?.messageId) {
       const repliedMessage = await data.channel.messages.fetch(
         data.reference?.messageId
@@ -106,13 +134,21 @@ bot.on("messageCreate", async (data) => {
     });
   } else if (data.channelId === forwardId) {
     if (data.content.startsWith("!send")) {
-      bot.channels.cache.get(fedId)?.send(`<@${data.author.id}>: ${data.content.split("!send")[1].trim()}`);
+      bot.channels.cache
+        .get(fedId)
+        ?.send(
+          `<@${data.author.id}>: ${data.content.split("!send")[1].trim()}`
+        );
       data.attachments.forEach((attachment) => {
-        bot.channels.cache.get(fedId)?.send(`<@${data.author.id}>: ${attachment.url}`);
+        bot.channels.cache
+          .get(fedId)
+          ?.send(`<@${data.author.id}>: ${attachment.url}`);
       });
       data.react("✅");
     } else if (data.content.startsWith("!anon")) {
-      bot.channels.cache.get(fedId)?.send(`🕵️: ${data.content.split("!anon")[1].trim()}`);
+      bot.channels.cache
+        .get(fedId)
+        ?.send(`🕵️: ${data.content.split("!anon")[1].trim()}`);
       data.attachments.forEach((attachment) => {
         bot.channels.cache.get(fedId)?.send(`${attachment.url}`);
       });
