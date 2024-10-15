@@ -137,18 +137,18 @@ bot.on("messageCreate", async (data) => {
       bot.channels.cache
         .get(fedId)
         ?.send(
-          `<@${data.author.id}>: ${data.content.split("!send")[1].trim()}`
+          `<@${data.author.id}> » ${data.content.split("!send")[1].trim()}`
         );
       data.attachments.forEach((attachment) => {
         bot.channels.cache
           .get(fedId)
-          ?.send(`<@${data.author.id}>: ${attachment.url}`);
+          ?.send(`<@${data.author.id}> » ${attachment.url}`);
       });
       data.react("✅");
     } else if (data.content.startsWith("!anon")) {
       bot.channels.cache
         .get(fedId)
-        ?.send(`🕵️: ${data.content.split("!anon")[1].trim()}`);
+        ?.send(`🕵️ » ${data.content.split("!anon")[1].trim()}`);
       data.attachments.forEach((attachment) => {
         bot.channels.cache.get(fedId)?.send(`${attachment.url}`);
       });
