@@ -22,6 +22,8 @@ bot.on("ready", () => {
 
 bot.on("messageCreate", async (data) => {
   if (data.author.id === Deno.env.get("DISCORD_ID")) return;
+  // do not respond to webhooks to avoid the incident of 10/15/2024
+  if (data.webhookId) return;
 
   if (data.type === "CHANNEL_ICON_CHANGE") {
     webhook.send({
@@ -136,20 +138,24 @@ bot.on("messageCreate", async (data) => {
     if (data.content.startsWith("!send")) {
       bot.channels.cache
         .get(fedId)
+         //@ts-ignore colon :3
         ?.send(
           `<@${data.author.id}> » ${data.content.split("!send")[1].trim()}`
         );
       data.attachments.forEach((attachment) => {
         bot.channels.cache
           .get(fedId)
+           //@ts-ignore colon :3
           ?.send(`<@${data.author.id}> » ${attachment.url}`);
       });
       data.react("✅");
     } else if (data.content.startsWith("!anon")) {
       bot.channels.cache
         .get(fedId)
+         //@ts-ignore colon :3
         ?.send(`🕵️ » ${data.content.split("!anon")[1].trim()}`);
       data.attachments.forEach((attachment) => {
+        //@ts-ignore colon :3
         bot.channels.cache.get(fedId)?.send(`${attachment.url}`);
       });
       data.react("✅");
