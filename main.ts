@@ -10,7 +10,7 @@ const forwardId = Deno.env.get("CHANNEL_ID_TO_FORWARD");
 
 if (!fedId || !forwardId) {
   throw new Error(
-    "CHANNEL_ID_TO_FED or CHANNEL_ID_TO_FORWARD is not defined, please define them in a .env file"
+    "CHANNEL_ID_TO_FED or CHANNEL_ID_TO_FORWARD is not defined, please define them in a .env file",
   );
 }
 
@@ -47,7 +47,7 @@ bot.on("messageCreate", async (data) => {
           .setFooter({
             text: data.author.username,
             iconURL: data.author.displayAvatarURL(),
-          })
+          }),
       );
     }
     if (data.type === "RECIPIENT_ADD") {
@@ -61,12 +61,12 @@ bot.on("messageCreate", async (data) => {
           .setFooter({
             text: data.author.username,
             iconURL: data.author.displayAvatarURL(),
-          })
+          }),
       );
     }
     if (data.type === "REPLY" && data.reference?.messageId) {
       const repliedMessage = await data.channel.messages.fetch(
-        data.reference?.messageId
+        data.reference?.messageId,
       );
       const replyEmbed = new EmbedBuilder()
         .setTitle("Replied message")
@@ -102,12 +102,11 @@ bot.on("messageCreate", async (data) => {
             new EmbedBuilder()
               .setTitle("Attachment")
               .setImage(attachment.url)
-
               .setColor(0x00ff00)
               .setFooter({
                 text: data.author.username,
                 iconURL: data.author.displayAvatarURL(),
-              })
+              }),
           );
         }
       });
@@ -123,11 +122,8 @@ bot.on("messageCreate", async (data) => {
     webhook.send({
       username: data.author.username,
       avatarURL: data.author.displayAvatarURL(),
-      content:
-        cleaned.length > 2000
-          ? cleaned.slice(0, 2000)
-          : cleaned ||
-            "SHaboom booom (this is from the bot when no message content not anyone in the gc)",
+      content: cleaned.length > 2000 ? cleaned.slice(0, 2000) : cleaned ||
+        "SHaboom booom (this is from the bot when no message content not anyone in the gc)",
       embeds: embeds,
       allowedMentions: {
         roles: [],
@@ -138,21 +134,21 @@ bot.on("messageCreate", async (data) => {
     if (data.content.startsWith("!send")) {
       bot.channels.cache
         .get(fedId)
-         //@ts-ignore colon :3
+        //@ts-ignore colon :3
         ?.send(
-          `<@${data.author.id}> » ${data.content.split("!send")[1].trim()}`
+          `<@${data.author.id}> » ${data.content.split("!send")[1].trim()}`,
         );
       data.attachments.forEach((attachment) => {
         bot.channels.cache
           .get(fedId)
-           //@ts-ignore colon :3
+          //@ts-ignore colon :3
           ?.send(`<@${data.author.id}> » ${attachment.url}`);
       });
       data.react("✅");
     } else if (data.content.startsWith("!anon")) {
       bot.channels.cache
         .get(fedId)
-         //@ts-ignore colon :3
+        //@ts-ignore colon :3
         ?.send(`🕵️ » ${data.content.split("!anon")[1].trim()}`);
       data.attachments.forEach((attachment) => {
         //@ts-ignore colon :3
