@@ -4,11 +4,9 @@
     "jsr:@std/assert@1": "1.0.6",
     "jsr:@std/dotenv@*": "0.225.2",
     "jsr:@std/internal@^1.0.4": "1.0.4",
-    "npm:@types/node@^22.5.0": "22.7.5",
     "npm:@types/ws@^8.5.12": "8.5.12",
     "npm:discord.js-selfbot-v13@*": "3.4.0",
     "npm:discord.js@*": "14.16.3",
-    "npm:typescript@^5.5.4": "5.6.3",
     "npm:ws@^8.18.0": "8.18.0"
   },
   "jsr": {
@@ -107,16 +105,10 @@
         "undici-types"
       ]
     },
-    "@types/node@22.7.5": {
-      "integrity": "sha512-jML7s2NAzMWc//QSJ1a3prpk78cOPchGvXJsC3C6R6PSMoooztvRVQEz89gmBTBY1SPMaqo5teB4uNHPdetShQ==",
-      "dependencies": [
-        "undici-types"
-      ]
-    },
     "@types/ws@8.5.12": {
       "integrity": "sha512-3tPRkv1EtkDpzlgyKyI8pGsGZAGPEaXeu0DOj5DI25Ja91bdAYddYHbADRYVrZMRbfW+1l5YwXVDKohDJNQxkQ==",
       "dependencies": [
-        "@types/node@22.5.4"
+        "@types/node"
       ]
     },
     "@vladfrangu/async_event_emitter@2.4.6": {
@@ -405,9 +397,6 @@
     "tslib@2.7.0": {
       "integrity": "sha512-gLXCKdN1/j47AiHiOkJN69hJmcbGTHI0ImLmbYLHykhgeN0jVGola9yVjFgzCUklsZQMW55o+dW7IXv3RCXDzA=="
     },
-    "typescript@5.6.3": {
-      "integrity": "sha512-hjcS1mhfuyi4WW8IWtjP7brDrG2cuDZukyrYrSauoXGNgx0S7zceP07adYkJycEr56BOUTNPzbInooiN3fn1qw=="
-    },
     "undici-types@6.19.8": {
       "integrity": "sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw=="
     },
@@ -480,14 +469,6 @@
       "jsr:@std/assert@1",
       "npm:discord.js-selfbot-v13@*",
       "npm:discord.js@*"
-    ],
-    "packageJson": {
-      "dependencies": [
-        "npm:@types/node@^22.5.0",
-        "npm:@types/ws@^8.5.12",
-        "npm:typescript@^5.5.4",
-        "npm:ws@^8.18.0"
-      ]
-    }
+    ]
   }
 }

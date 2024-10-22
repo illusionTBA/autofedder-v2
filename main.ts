@@ -5,9 +5,9 @@ import { Client } from "npm:discord.js-selfbot-v13";
 const webhook = new WebhookClient({
   url: Deno.env.get("WEBHOOK_URL") as string,
 });
+
 const fedId = Deno.env.get("CHANNEL_ID_TO_FED");
 const forwardId = Deno.env.get("CHANNEL_ID_TO_FORWARD");
-
 if (!fedId || !forwardId) {
   throw new Error(
     "CHANNEL_ID_TO_FED or CHANNEL_ID_TO_FORWARD is not defined, please define them in a .env file",
@@ -145,7 +145,10 @@ bot.on("messageCreate", async (data) => {
           ?.send(`<@${data.author.id}> » ${attachment.url}`);
       });
       data.react("✅");
-    } else if (data.content.startsWith("!anon")) {
+    } else if (
+      data.content.startsWith("!anon") &&
+      Deno.env.get("ANON_ENABLED") === "true"
+    ) {
       bot.channels.cache
         .get(fedId)
         //@ts-ignore colon :3
