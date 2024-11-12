@@ -1,32 +1,41 @@
-class LimitedMap extends Map {
-  limit: number;
-  keysArray: unknown[];
-  constructor(limit = 100) {
-    super();
-    this.limit = limit;
-    this.keysArray = [];
+import { Database } from "jsr:@db/sqlite";
+
+class DatabaseWrapper {
+  db: Database;
+  constructor() {
+    this.db = new Database(Deno.env.get("DB_FILE_NAME") || "data.db");
+    this.db.prepare(`
+            CREATE TABLE IF NOT EXISTS messages (
+              id TEXT PRIMARY KEY,
+              webhook_id TEXT
+            )
+          `).run();
+  }
+  save(id: string, webhookId: string) {
+    const stmt = this.db.prepare(
+      `INSERT OR REPLACE INTO messages (id, webhook_id) VALUES (?, ?)`,
+    );
+    stmt.run(id, webhookId);
   }
 
-  override set(key: unknown, value: unknown) {
-    if (this.size >= this.limit) {
-      const oldestKey = this.keysArray.shift();
-      this.delete(oldestKey);
-    }
+  get(id: string): string | undefined {
+    const stmt = this.db.prepare(
+      `SELECT webhook_id FROM messages WHERE id = ?`,
+    );
+    const row = stmt.get(id) as Record<string, string>;
+    
+    return row ? row.webhook_id : undefined;
+  }
 
-    if (!this.has(key)) {
-      this.keysArray.push(key);
-    }
-
-    return super.set(key, value);
+  delete(id: string) {
+    const stmt = this.db.prepare(`DELETE FROM messages WHERE id = ?`);
+    stmt.run(id);
   }
 }
 
 function cleanMessage(message: string): string {
-    return message
-      .replaceAll("@everyone", "@\u200Beveryone")
-      .replaceAll("@here", "@\u200Bhere");
+  return message
+    .replaceAll("@everyone", "@\u200Beveryone")
+    .replaceAll("@here", "@\u200Bhere");
 }
-export {
-    LimitedMap,
-    cleanMessage
-}
+export { cleanMessage, DatabaseWrapper };

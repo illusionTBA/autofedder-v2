@@ -1,7 +1,8 @@
 import "jsr:@std/dotenv/load";
 import { EmbedBuilder, WebhookClient } from "npm:discord.js";
 import { Client, Message } from "npm:discord.js-selfbot-v13";
-import { LimitedMap, cleanMessage } from "./utils.ts";
+import { APIMessage } from "npm:discord-api-types/v10"
+import { cleanMessage, DatabaseWrapper } from "./utils.ts";
 
 const fedId = Deno.env.get("CHANNEL_ID_TO_FED");
 const forwardId = Deno.env.get("CHANNEL_ID_TO_FORWARD");
@@ -15,28 +16,32 @@ const webhook = new WebhookClient({
   url: Deno.env.get("WEBHOOK_URL") as string,
 });
 const bot = new Client();
-const map = new LimitedMap(100);
+const db = new DatabaseWrapper();
 
 bot.on("ready", () => {
   console.log("autofedder ready");
 });
 
 bot.on("messageUpdate", async (oldData, newData) => {
+  if (newData?.channelId !== fedId) return;
   if (newData.author?.id === Deno.env.get("DISCORD_ID")) return;
   if (newData?.webhookId) return;
-  if (newData?.channelId === fedId && map.has(oldData.id)) {
-    const webhook = await handleMessageFedding(newData, oldData.id);
-    map.set(oldData.id, webhook);
+  const id = db.get(oldData.id);
+  if (id) {
+    const webhook = await handleMessageFedding(newData, id);
+    db.save(oldData.id, webhook?.id);
     return;
   }
 });
 
 bot.on("messageDelete", (data) => {
+  if (data?.channelId !== fedId) return;
   if (data.author?.id === Deno.env.get("DISCORD_ID")) return;
   if (data?.webhookId) return;
-  if (data?.channelId === fedId && map.has(data.id)) {
-    webhook.deleteMessage(map.get(data.id));
-    map.delete(data.id);
+  const id = db.get(data.id);
+  if (id) {
+    webhook.deleteMessage(id);
+    db.delete(data.id);
     return;
   }
 });
@@ -47,7 +52,7 @@ bot.on("messageCreate", async (data) => {
   if (data.webhookId) return;
   if (data.channelId === fedId) {
     const webhook = await handleMessageFedding(data);
-    map.set(data.id, webhook);
+    db.save(data.id, webhook?.id);
     return;
   }
 
@@ -86,7 +91,7 @@ bot.on("messageCreate", async (data) => {
 
 bot.login(Deno.env.get("DISCORD_TOKEN") as string);
 
-async function handleMessageFedding(data: Message<boolean>, edit?: string) {
+async function handleMessageFedding(data: Message<boolean>, edit?: string): Promise<APIMessage> {
   const embeds: EmbedBuilder[] = [];
   const videos: string[] = [];
 
@@ -194,9 +199,8 @@ async function handleMessageFedding(data: Message<boolean>, edit?: string) {
   const options = {
     username: data.author.username,
     avatarURL: data.author.displayAvatarURL(),
-    content: cleaned.length > 2000
-      ? cleaned.slice(0, 2000)
-      : cleaned || `SHaboom booom (this is from the bot, most likely an unhandled message event (${data.type})`,
+    content: cleaned.length > 2000 ? cleaned.slice(0, 2000) : cleaned ||
+      `SHaboom booom (this is from the bot, most likely an unhandled message event (${data.type})`,
     embeds: embeds,
     allowedMentions: {
       roles: [],
@@ -204,7 +208,7 @@ async function handleMessageFedding(data: Message<boolean>, edit?: string) {
     },
   };
   if (edit) {
-    return await webhook.editMessage(map.get(edit), options);
+    return await webhook.editMessage(edit, options);
   }
   return await webhook.send(options);
 }
