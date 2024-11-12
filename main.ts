@@ -36,6 +36,7 @@ bot.on("messageDelete", (data) => {
   if (data?.webhookId) return;
   if (data?.channelId === fedId && map.has(data.id)) {
     webhook.deleteMessage(map.get(data.id));
+    map.delete(data.id);
     return;
   }
 });
@@ -205,7 +206,5 @@ async function handleMessageFedding(data: Message<boolean>, edit?: string) {
   if (edit) {
     return await webhook.editMessage(map.get(edit), options);
   }
-  console.log(embeds.length);
-  console.log(cleaned)
   return await webhook.send(options);
 }
