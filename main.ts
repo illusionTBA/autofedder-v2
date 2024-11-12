@@ -1,11 +1,7 @@
 import "jsr:@std/dotenv/load";
 import { EmbedBuilder, WebhookClient } from "npm:discord.js";
 import { Client, Message } from "npm:discord.js-selfbot-v13";
-import { LimitedMap } from "./utils.ts";
-
-const webhook = new WebhookClient({
-  url: Deno.env.get("WEBHOOK_URL") as string,
-});
+import { LimitedMap, cleanMessage } from "./utils.ts";
 
 const fedId = Deno.env.get("CHANNEL_ID_TO_FED");
 const forwardId = Deno.env.get("CHANNEL_ID_TO_FORWARD");
@@ -15,6 +11,9 @@ if (!fedId || !forwardId) {
   );
 }
 
+const webhook = new WebhookClient({
+  url: Deno.env.get("WEBHOOK_URL") as string,
+});
 const bot = new Client();
 const map = new LimitedMap(100);
 
@@ -28,6 +27,15 @@ bot.on("messageUpdate", async (oldData, newData) => {
   if (newData?.channelId === fedId && map.has(oldData.id)) {
     const webhook = await handleMessageFedding(newData, oldData.id);
     map.set(oldData.id, webhook);
+    return;
+  }
+});
+
+bot.on("messageDelete", (data) => {
+  if (data.author?.id === Deno.env.get("DISCORD_ID")) return;
+  if (data?.webhookId) return;
+  if (data?.channelId === fedId && map.has(data.id)) {
+    webhook.deleteMessage(map.get(data.id));
     return;
   }
 });
@@ -76,12 +84,6 @@ bot.on("messageCreate", async (data) => {
 });
 
 bot.login(Deno.env.get("DISCORD_TOKEN") as string);
-
-function cleanMessage(message: string): string {
-  return message
-    .replaceAll("@everyone", "@\u200Beveryone")
-    .replaceAll("@here", "@\u200Bhere");
-}
 
 async function handleMessageFedding(data: Message<boolean>, edit?: string) {
   const embeds: EmbedBuilder[] = [];
@@ -193,9 +195,7 @@ async function handleMessageFedding(data: Message<boolean>, edit?: string) {
     avatarURL: data.author.displayAvatarURL(),
     content: cleaned.length > 2000
       ? cleaned.slice(0, 2000)
-      : cleaned || embeds.length
-      ? ""
-      : `SHaboom booom (this is from the bot, most likely an unhandled message event (${data.type})`,
+      : cleaned || `SHaboom booom (this is from the bot, most likely an unhandled message event (${data.type})`,
     embeds: embeds,
     allowedMentions: {
       roles: [],
@@ -205,5 +205,7 @@ async function handleMessageFedding(data: Message<boolean>, edit?: string) {
   if (edit) {
     return await webhook.editMessage(map.get(edit), options);
   }
+  console.log(embeds.length);
+  console.log(cleaned)
   return await webhook.send(options);
 }

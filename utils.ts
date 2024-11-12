@@ -1,4 +1,4 @@
-export class LimitedMap extends Map {
+class LimitedMap extends Map {
   limit: number;
   keysArray: unknown[];
   constructor(limit = 100) {
@@ -19,4 +19,14 @@ export class LimitedMap extends Map {
 
     return super.set(key, value);
   }
+}
+
+function cleanMessage(message: string): string {
+    return message
+      .replaceAll("@everyone", "@\u200Beveryone")
+      .replaceAll("@here", "@\u200Bhere");
+}
+export {
+    LimitedMap,
+    cleanMessage
 }
