@@ -23,7 +23,7 @@ class DatabaseWrapper {
       `SELECT webhook_id FROM messages WHERE id = ?`,
     );
     const row = stmt.get(id) as Record<string, string>;
-    
+
     return row ? row.webhook_id : undefined;
   }
 

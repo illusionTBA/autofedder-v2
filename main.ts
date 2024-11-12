@@ -1,7 +1,7 @@
 import "jsr:@std/dotenv/load";
 import { EmbedBuilder, WebhookClient } from "npm:discord.js";
 import { Client, Message } from "npm:discord.js-selfbot-v13";
-import { APIMessage } from "npm:discord-api-types/v10"
+import { APIMessage } from "npm:discord-api-types/v10";
 import { cleanMessage, DatabaseWrapper } from "./utils.ts";
 
 const fedId = Deno.env.get("CHANNEL_ID_TO_FED");
@@ -91,7 +91,10 @@ bot.on("messageCreate", async (data) => {
 
 bot.login(Deno.env.get("DISCORD_TOKEN") as string);
 
-async function handleMessageFedding(data: Message<boolean>, edit?: string): Promise<APIMessage> {
+async function handleMessageFedding(
+  data: Message<boolean>,
+  edit?: string,
+): Promise<APIMessage> {
   const embeds: EmbedBuilder[] = [];
   const videos: string[] = [];
 
@@ -196,11 +199,14 @@ async function handleMessageFedding(data: Message<boolean>, edit?: string): Prom
       cleaned += ` [video ${i + 1}](${videos[i]}) `;
     }
   }
+  const message = cleaned.length > 2000 ? cleaned.slice(0, 2000) : cleaned;
+  const noContentMessage = embeds.length
+    ? ""
+    : `SHaboom booom (this is from the bot, most likely an unhandled message event [${data.type}])`;
   const options = {
     username: data.author.username,
     avatarURL: data.author.displayAvatarURL(),
-    content: cleaned.length > 2000 ? cleaned.slice(0, 2000) : cleaned ||
-      `SHaboom booom (this is from the bot, most likely an unhandled message event (${data.type})`,
+    content: message || noContentMessage,
     embeds: embeds,
     allowedMentions: {
       roles: [],
