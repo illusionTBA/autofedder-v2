@@ -27,6 +27,16 @@ class DatabaseWrapper {
     return row ? row.webhook_id : undefined;
   }
 
+  getHookId(id: string): string | undefined {
+    const stmt = this.db.prepare(
+      `SELECT id FROM messages WHERE webhook_id = ?`,
+    );
+
+    const row = stmt.get(id) as Record<string, string>;
+
+    return row ? row.id : undefined;
+  }
+
   delete(id: string) {
     const stmt = this.db.prepare(`DELETE FROM messages WHERE id = ?`);
     stmt.run(id);

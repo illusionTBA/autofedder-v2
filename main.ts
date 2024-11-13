@@ -59,7 +59,7 @@ bot.on("messageCreate", async (data) => {
 
   if (data.channelId === forwardId && Deno.env.get("MESSAGES_ENABLED")) {
     if (data.content.startsWith("!send ")) {
-      handleMessages(data, "!send ", "<@${data.author.id}>");
+      handleMessages(data, "!send ", `<@${data.author.id}>`);
     }
     if (
       data.content.startsWith("!anon ") &&
@@ -76,15 +76,30 @@ async function handleMessages(
   decorator: string,
 ) {
   try {
+    let repliedMessage;
+    if (data.type === "REPLY" && data.reference?.messageId) {
+      const id = db.getHookId(data.reference?.messageId);
+      if (id) {
+        repliedMessage = await bot.channels.cache.get(fedId).messages.fetch(
+          id,
+        );
+      }
+    }
     if (data.content) {
-      bot.channels.cache.get(fedId).send(
-        `${decorator} » ${data.content.slice(slice.length)[1]}`,
-      );
+      const message = `${decorator} » ${data.content.slice(slice.length)}`;
+      repliedMessage
+        ? repliedMessage.reply(
+          message,
+        )
+        : bot.channels.cache.get(fedId).send(
+          message,
+        );
     }
     if (data.attachments) {
       data.attachments.forEach((attachment: { url: any }) => {
+        const message = `${decorator} » ${attachment.url}`;
         bot.channels.cache.get(fedId)?.send(
-          `<@${data.author.id}> » ${attachment.url}`,
+          message,
         );
       });
     }
@@ -93,6 +108,7 @@ async function handleMessages(
     data.reply(`An error occured and your message was not sent. (${e})`);
     return;
   }
+  data.react("✅");
 }
 
 async function handleMessageFedding(
@@ -109,6 +125,7 @@ async function handleMessageFedding(
       content: "GC Icon changed to whatever this is",
     });
   }
+  
   if (data.type === "CHANNEL_NAME_CHANGE") {
     embeds.push(
       new EmbedBuilder()
@@ -182,7 +199,7 @@ async function handleMessageFedding(
       (attachment: { contentType: string | string[]; url: string | null }) => {
         if (!attachment || !attachment.contentType) return;
         if (attachment.contentType.includes("video")) {
-          videos.push(attachment.url);
+          videos.push(attachment.url!);
         } else {
           embeds.push(
             new EmbedBuilder()
@@ -190,8 +207,8 @@ async function handleMessageFedding(
               .setImage(attachment.url)
               .setColor(0x00ff00)
               .setFooter({
-                text: data.author.username,
-                iconURL: data.author.displayAvatarURL(),
+                text: data.author!.username,
+                iconURL: data.author!.displayAvatarURL(),
               }),
           );
         }
@@ -210,8 +227,8 @@ async function handleMessageFedding(
     ? ""
     : `SHaboom booom (this is from the bot, most likely an unhandled message event [${data.type}])`;
   const options = {
-    username: data.author.username,
-    avatarURL: data.author.displayAvatarURL(),
+    username: data.author?.username,
+    avatarURL: data.author?.displayAvatarURL(),
     content: message || noContentMessage,
     embeds: embeds,
     allowedMentions: {
