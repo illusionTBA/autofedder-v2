@@ -3,6 +3,7 @@ import { EmbedBuilder, WebhookClient } from "npm:discord.js";
 import { Client, Message } from "npm:discord.js-selfbot-v13";
 import { APIMessage } from "npm:discord-api-types/v10";
 import { cleanMessage, DatabaseWrapper } from "./utils.ts";
+import { PartialMessage } from "discord.js";
 
 const fedId = Deno.env.get("CHANNEL_ID_TO_FED");
 const forwardId = Deno.env.get("CHANNEL_ID_TO_FORWARD");
@@ -56,43 +57,46 @@ bot.on("messageCreate", async (data) => {
     return;
   }
 
-  if (data.channelId === forwardId) {
-    if (data.content.startsWith("!send")) {
-      bot.channels.cache
-        .get(fedId)
-        //@ts-ignore colon :3
-        ?.send(
-          `<@${data.author.id}> » ${data.content.split("!send")[1].trim()}`,
-        );
-      data.attachments.forEach((attachment) => {
-        bot.channels.cache
-          .get(fedId)
-          //@ts-ignore colon :3
-          ?.send(`<@${data.author.id}> » ${attachment.url}`);
-      });
-      data.react("✅");
-      return;
-    } else if (
-      data.content.startsWith("!anon") &&
-      Deno.env.get("ANON_ENABLED") === "true"
-    ) {
-      bot.channels.cache
-        .get(fedId)
-        //@ts-ignore colon :3
-        ?.send(`🕵️ » ${data.content.split("!anon")[1].trim()}`);
-      data.attachments.forEach((attachment) => {
-        //@ts-ignore colon :3
-        bot.channels.cache.get(fedId)?.send(`${attachment.url}`);
-      });
-      data.react("✅");
+  if (data.channelId === forwardId && Deno.env.get("MESSAGES_ENABLED")) {
+    if (data.content.startsWith("!send ")) {
+      handleMessages(data, "!send ", "<@${data.author.id}>");
     }
+    if (
+      data.content.startsWith("!anon ") &&
+      Deno.env.get("ANON_ENABLED") === "true"
+    ) handleMessages(data, "!anon ", "🕵️");
   }
 });
 
 bot.login(Deno.env.get("DISCORD_TOKEN") as string);
 
-async function handleMessageFedding(
+async function handleMessages(
   data: Message<boolean>,
+  slice: string,
+  decorator: string,
+) {
+  try {
+    if (data.content) {
+      bot.channels.cache.get(fedId).send(
+        `${decorator} » ${data.content.slice(slice.length)[1]}`,
+      );
+    }
+    if (data.attachments) {
+      data.attachments.forEach((attachment: { url: any }) => {
+        bot.channels.cache.get(fedId)?.send(
+          `<@${data.author.id}> » ${attachment.url}`,
+        );
+      });
+    }
+  } catch (e: unknown) {
+    data.react("❌");
+    data.reply(`An error occured and your message was not sent. (${e})`);
+    return;
+  }
+}
+
+async function handleMessageFedding(
+  data: Message<boolean> | PartialMessage,
   edit?: string,
 ): Promise<APIMessage> {
   const embeds: EmbedBuilder[] = [];
@@ -174,23 +178,25 @@ async function handleMessageFedding(
     embeds.push(replyEmbed);
   }
   if (data.attachments.size !== 0) {
-    data.attachments.forEach((attachment) => {
-      if (!attachment || !attachment.contentType) return;
-      if (attachment.contentType.includes("video")) {
-        videos.push(attachment.url);
-      } else {
-        embeds.push(
-          new EmbedBuilder()
-            .setTitle("Attachment")
-            .setImage(attachment.url)
-            .setColor(0x00ff00)
-            .setFooter({
-              text: data.author.username,
-              iconURL: data.author.displayAvatarURL(),
-            }),
-        );
-      }
-    });
+    data.attachments.forEach(
+      (attachment: { contentType: string | string[]; url: string | null }) => {
+        if (!attachment || !attachment.contentType) return;
+        if (attachment.contentType.includes("video")) {
+          videos.push(attachment.url);
+        } else {
+          embeds.push(
+            new EmbedBuilder()
+              .setTitle("Attachment")
+              .setImage(attachment.url)
+              .setColor(0x00ff00)
+              .setFooter({
+                text: data.author.username,
+                iconURL: data.author.displayAvatarURL(),
+              }),
+          );
+        }
+      },
+    );
   }
 
   let cleaned = cleanMessage(data.content);
