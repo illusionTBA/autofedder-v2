@@ -95,8 +95,8 @@ async function handleMessages(
           message,
         );
     }
-    if (data.attachments) {
-      data.attachments.forEach((attachment: { url: any }) => {
+    if (data.attachments.size !== 0) {
+      data.attachments.forEach((attachment: { url: string }) => {
         const message = `${decorator} » ${attachment.url}`;
         bot.channels.cache.get(fedId)?.send(
           message,
@@ -125,7 +125,7 @@ async function handleMessageFedding(
       content: "GC Icon changed to whatever this is",
     });
   }
-  
+
   if (data.type === "CHANNEL_NAME_CHANGE") {
     embeds.push(
       new EmbedBuilder()
