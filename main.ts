@@ -58,13 +58,13 @@ bot.on("messageCreate", async (data) => {
   }
 
   if (data.channelId === forwardId && Deno.env.get("MESSAGES_ENABLED")) {
-    if (data.content.startsWith("!send ")) {
-      handleMessages(data, "!send ", `<@${data.author.id}>`);
+    if (data.content.startsWith("!send")) {
+      handleMessages(data, "!send", `<@${data.author.id}>`);
     }
     if (
-      data.content.startsWith("!anon ") &&
+      data.content.startsWith("!anon") &&
       Deno.env.get("ANON_ENABLED") === "true"
-    ) handleMessages(data, "!anon ", "🕵️");
+    ) handleMessages(data, "!anon", "🕵️");
   }
 });
 
@@ -80,25 +80,25 @@ async function handleMessages(
     if (data.type === "REPLY" && data.reference?.messageId) {
       const id = db.getHookId(data.reference?.messageId);
       if (id) {
-        repliedMessage = await bot.channels.cache.get(fedId).messages.fetch(
+        repliedMessage = await bot.channels.cache.get(fedId!)?.messages.fetch(
           id,
         );
       }
     }
     if (data.content) {
-      const message = `${decorator} » ${data.content.slice(slice.length)}`;
+      const message = `${decorator} » ${data.content.slice(slice.length + 1)}`;
       repliedMessage
         ? repliedMessage.reply(
           message,
         )
-        : bot.channels.cache.get(fedId).send(
+        : bot.channels.cache.get(fedId!)?.send(
           message,
         );
     }
     if (data.attachments.size !== 0) {
       data.attachments.forEach((attachment: { url: string }) => {
         const message = `${decorator} » ${attachment.url}`;
-        bot.channels.cache.get(fedId)?.send(
+        bot.channels.cache.get(fedId!)?.send(
           message,
         );
       });
